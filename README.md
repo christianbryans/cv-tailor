@@ -16,7 +16,7 @@ Left: inputs and editor. Right: live A4 preview. Export to PDF, DOCX, or plain t
    |---|---|
    | `GROQ_API_KEY` | free key from https://console.groq.com/keys (no credit card) |
    | `ACCESS_CODE` | any secret string (recommended, protects your free quota from strangers) |
-   | `GROQ_MODEL` | optional, default `llama-3.3-70b-versatile` |
+   | `GROQ_MODEL` | optional, default `openai/gpt-oss-120b` |
 
    Prefer Claude? Set `ANTHROPIC_API_KEY` instead (and optionally `AI_PROVIDER=claude`).
 4. Deploy. Open the app → Settings (sliders icon) → enter the same `ACCESS_CODE`.
