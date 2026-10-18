@@ -2,6 +2,8 @@ import { ApiError, extractJSON, fail, guard } from '@/lib/server';
 import { complete } from '@/lib/llm';
 import { normalizeCV } from '@/lib/cv';
 import { enforceIntegrity } from '@/lib/integrity';
+import { extractKeywords } from '@/lib/ats';
+import type { CV } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -25,14 +27,21 @@ ATS formatting rules
 - "summary" = 2 to 4 sentences, maximum 75 words, written for this role.
 - Never remove an experience entry or an education entry. You may trim bullets/awards/certifications/organizations that are least relevant, depending on intensity and length.
 
-Return ONLY a JSON object, no prose, no code fences, with this shape:
+Input and output are COMPACT. You only see the editable parts of the resume, addressed by index. Everything you do not return stays exactly as in the baseline.
+Return ONLY a JSON object, no prose, no code fences. Include only the keys you actually change:
 {
   "job": {"title": "role title from the posting", "company": "company name if stated else empty"},
-  "cv": { same structure as the input resume JSON },
-  "keywords": ["the 10-20 most important ATS keywords from the posting"],
+  "headline": "...",
+  "summary": "...",
+  "experience": [{"i": 0, "bullets": ["rewritten bullets for experience #0"]}],
+  "skills": [{"label": "group label", "items": "item, item, item"}],
+  "awards": [indexes of awards to keep, most relevant first],
+  "certifications": [indexes of certifications to keep, most relevant first],
+  "organizations": [{"i": 0, "description": "rewritten description"}],
   "changes": ["3-8 short, specific notes on what you changed and why"],
   "gaps": ["requirements in the posting the candidate does not evidence yet (empty array if none)"]
-}`;
+}
+Omit "experience" and "organizations" entirely when the rewrite intensity says to keep them word-for-word. List organizations in the order they should appear (omit the ones to drop).`;
 
 const INTENSITY: Record<string, string> = {
   light: 'LIGHT: rewrite only "headline" and "summary", and reorder skills. Keep every experience bullet word-for-word (you may reorder bullets by relevance). Keep all awards, certifications and organizations.',
@@ -45,6 +54,40 @@ const LENGTH: Record<number, string> = {
   1: 'LENGTH: the result must fit ONE A4 page, at most ~480 words in total, max 3 bullets per role, max 6 awards, max 4 certifications, max 3 organizations, education details limited to GPA and the most relevant 1 to 2 lines.',
   2: 'LENGTH: the result must fit TWO A4 pages, at most ~900 words in total.',
 };
+
+/** Apply the model's compact edits onto the baseline; anything missing or out of range falls back to the baseline. */
+function mergeEdits(base: CV, p: any): CV {
+  const txt = (v: unknown, fallback: string) => (typeof v === 'string' && v.trim() ? v : fallback);
+  const idx = (v: unknown, len: number) => (Array.isArray(v) ? v.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < len) : null);
+  const pickList = (v: unknown, list: string[]) => {
+    const ids = idx(v, list.length);
+    return ids ? [...new Set(ids)].map((i) => list[i]) : list;
+  };
+
+  const bullets = new Map<number, string[]>();
+  for (const e of Array.isArray(p.experience) ? p.experience : []) {
+    const i = Number(e?.i);
+    if (Number.isInteger(i) && Array.isArray(e?.bullets) && e.bullets.length) bullets.set(i, e.bullets.map(String));
+  }
+
+  const orgs = Array.isArray(p.organizations)
+    ? p.organizations
+        .map((o: any) => ({ i: Number(o?.i), description: o?.description }))
+        .filter((o: any) => Number.isInteger(o.i) && o.i >= 0 && o.i < base.organizations.length)
+        .map((o: any) => ({ ...base.organizations[o.i], description: txt(o.description, base.organizations[o.i].description) }))
+    : base.organizations;
+
+  return {
+    ...base,
+    headline: txt(p.headline, base.headline),
+    summary: txt(p.summary, base.summary),
+    experience: base.experience.map((e, i) => ({ ...e, bullets: bullets.get(i) ?? e.bullets })),
+    skills: Array.isArray(p.skills) && p.skills.length ? p.skills : base.skills,
+    awards: pickList(p.awards, base.awards),
+    certifications: pickList(p.certifications, base.certifications),
+    organizations: orgs,
+  };
+}
 
 export async function POST(req: Request) {
   try {
@@ -61,31 +104,46 @@ export async function POST(req: Request) {
     const intensity = ['light', 'balanced', 'bold'].includes(opts.intensity) ? opts.intensity : 'balanced';
     const pages = opts.pages === 1 ? 1 : 2;
 
+    const keywords = extractKeywords(jobText, 15).map((k) => k.term);
+
+    // only the editable parts go to the model; facts (contact, dates, schools) never leave the server
+    const compact = {
+      headline: baseline.headline,
+      summary: baseline.summary,
+      experience: baseline.experience.map((e, i) => ({ i, role: e.role, company: e.company, bullets: e.bullets })),
+      skills: baseline.skills.map((g) => ({ label: g.label, items: g.items })),
+      awards: baseline.awards.map((text, i) => ({ i, text })),
+      certifications: baseline.certifications.map((text, i) => ({ i, text })),
+      organizations: baseline.organizations.map((o, i) => ({ i, role: o.role, org: o.org, description: o.description })),
+    };
+
     const user = `OUTPUT LANGUAGE: write all rewritten text in ${language}. Do not translate proper nouns, company names, award names or tool names.
 REWRITE INTENSITY: ${INTENSITY[intensity]}
 ${LENGTH[pages]}
+PRIORITY KEYWORDS (pre-extracted from the posting; use only where the resume truthfully supports them): ${keywords.join(', ') || 'none'}
 
 <job_posting title="${String(body.job?.title || '').replace(/"/g, "'").slice(0, 160)}" company="${String(body.job?.company || '').replace(/"/g, "'").slice(0, 160)}">
-${jobText.slice(0, 9000)}
+${jobText.slice(0, 6000)}
 </job_posting>
 
-<baseline_resume_json>
-${JSON.stringify(baseline)}
-</baseline_resume_json>
+<resume_editable_parts>
+${JSON.stringify(compact)}
+</resume_editable_parts>
 
 Tailor the resume to the posting following all rules. Return the JSON object only.`;
 
-    const raw = await complete({ system: SYSTEM, user, maxTokens: 6500 });
+    const raw = await complete({ system: SYSTEM, user, maxTokens: 3500 });
     const parsed = extractJSON(raw);
-    if (!parsed?.cv) throw new ApiError(502, 'The model returned an unexpected structure. Please try again.');
+    if (!parsed || typeof parsed !== 'object') throw new ApiError(502, 'The model returned an unexpected structure. Please try again.');
 
-    const { cv, notes, warnings } = enforceIntegrity(baseline, parsed.cv);
+    const merged = mergeEdits(baseline, parsed);
+    const { cv, notes, warnings } = enforceIntegrity(baseline, merged);
     const strs = (v: unknown) => (Array.isArray(v) ? v.map((x) => String(x).trim()).filter(Boolean) : []);
 
     return Response.json({
       cv,
       job: { title: String(parsed.job?.title || ''), company: String(parsed.job?.company || '') },
-      keywords: strs(parsed.keywords),
+      keywords,
       changes: [...strs(parsed.changes), ...notes],
       gaps: strs(parsed.gaps),
       warnings,

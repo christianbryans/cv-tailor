@@ -17,6 +17,8 @@ Left: inputs and editor. Right: live A4 preview. Export to PDF, DOCX, or plain t
    | `GROQ_API_KEY` | free key from https://console.groq.com/keys (no credit card) |
    | `ACCESS_CODE` | any secret string (recommended, protects your free quota from strangers) |
    | `GROQ_MODEL` | optional, default `openai/gpt-oss-120b` |
+   | `GEMINI_API_KEY` | optional free key from https://aistudio.google.com/apikey, used as automatic backup when Groq is rate-limited |
+   | `OPENROUTER_API_KEY` | optional free key from https://openrouter.ai/keys, extra backup (default model `nvidia/nemotron-3.5-super-vl:free`) |
 
    Prefer Claude? Set `ANTHROPIC_API_KEY` instead (and optionally `AI_PROVIDER=claude`).
 4. Deploy. Open the app → Settings (sliders icon) → enter the same `ACCESS_CODE`.
