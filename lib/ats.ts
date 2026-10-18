@@ -8,7 +8,7 @@ const STOP = new Set(
   ).split(' ')
 );
 
-const GENERIC = new Set(['design', 'designer', 'product', 'products', 'user', 'users', 'data', 'digital', 'create', 'build', 'building', 'develop', 'development', 'support', 'customer', 'customers', 'solutions', 'solution', 'process', 'processes', 'projects', 'project', 'management', 'manage']);
+const GENERIC = new Set(['through', 'best', 'real', 'complex', 'experiences', 'experience', 'visual', 'organization', 'satisfaction', 'design', 'designer', 'product', 'products', 'user', 'users', 'data', 'digital', 'create', 'build', 'building', 'develop', 'development', 'support', 'customer', 'customers', 'solutions', 'solution', 'process', 'processes', 'projects', 'project', 'management', 'manage']);
 
 const SHORT_TECH = new Set(['sql', 'aws', 'api', 'sdk', 'css', 'git', 'php', 'ios', 'gcp', 'seo', 'crm', 'erp', 'ci/cd', 'rest']);
 

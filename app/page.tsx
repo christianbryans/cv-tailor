@@ -12,6 +12,24 @@ import EditorPanel from '@/components/EditorPanel';
 import MatchPanel from '@/components/MatchPanel';
 import PreviewPane from '@/components/PreviewPane';
 
+const EXTRA_LABEL = 'Additional Skills';
+const splitSkills = (x: string) => x.split(',').map((t) => t.trim()).filter(Boolean);
+
+/** Make sure every confirmed term sits in the "Additional Skills" group, without duplicates. */
+function withExtra(cv: CV, extra: string[]): CV {
+  if (!extra.length) return cv;
+  const have = new Set(cv.skills.filter((g) => g.label !== EXTRA_LABEL).flatMap((g) => splitSkills(g.items)).map((t) => t.toLowerCase()));
+  const group = cv.skills.find((g) => g.label === EXTRA_LABEL);
+  const items = splitSkills(group?.items || '');
+  for (const t of extra) {
+    const k = t.toLowerCase();
+    if (!have.has(k) && !items.some((x) => x.toLowerCase() === k)) items.push(t);
+  }
+  if (!items.length) return cv;
+  const next = { id: group?.id || uid(), label: EXTRA_LABEL, items: items.join(', ') };
+  return { ...cv, skills: group ? cv.skills.map((g) => (g === group ? next : g)) : [...cv.skills, next] };
+}
+
 const LS = 'cvtailor:v1';
 type Tab = 'source' | 'editor' | 'match';
 type Toast = { kind: 'ok' | 'err'; msg: string } | null;
@@ -31,6 +49,8 @@ const slug = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '').trim();
 export default function Page() {
   const [hydrated, setHydrated] = useState(false);
   const [baseline, setBaseline] = useState<CV>(SAMPLE_CV);
+  /** Terms the user confirmed they really have. They survive re-tailoring and feed the match score. */
+  const [extraSkills, setExtraSkills] = useState<string[]>([]);
   const [isSample, setIsSample] = useState(true);
   const [job, setJob] = useState<Job>(EMPTY_JOB);
   const [versions, setVersions] = useState<Version[]>([]);
@@ -53,6 +73,8 @@ export default function Page() {
 
   const setCv = useCallback(
     (next: CV) => {
+      // keep the confirmed list in step with manual edits, so deleting a term removes it for good
+      setExtraSkills(splitSkills(next.skills.find((g) => g.label === EXTRA_LABEL)?.items || ''));
       if (active) setVersions((vs) => vs.map((v) => (v.id === active.id ? { ...v, cv: next } : v)));
       else {
         setBaseline(next);
@@ -81,6 +103,7 @@ export default function Page() {
         if (d.opts) setOpts({ ...DEFAULT_OPTS, ...d.opts });
         if (d.layout) setLayout({ ...DEFAULT_LAYOUT, ...d.layout });
         if (d.activeId) setActiveId(d.activeId);
+        if (Array.isArray(d.extraSkills)) setExtraSkills(d.extraSkills.map(String));
       }
       setCode(localStorage.getItem(`${LS}:code`) || '');
     } catch {
@@ -93,11 +116,11 @@ export default function Page() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(LS, JSON.stringify({ baseline, isSample, job, versions, opts, layout, activeId }));
+      localStorage.setItem(LS, JSON.stringify({ baseline, isSample, job, versions, opts, layout, activeId, extraSkills }));
     } catch {
       /* storage full or blocked */
     }
-  }, [hydrated, baseline, isSample, job, versions, opts, layout, activeId]);
+  }, [hydrated, baseline, isSample, job, versions, opts, layout, activeId, extraSkills]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -206,7 +229,7 @@ export default function Page() {
         warnings: string[];
       }>(
         '/api/tailor',
-        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cv: baseline, job, options: opts }) },
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cv: withExtra(baseline, extraSkills), job, options: opts }) },
         code
       );
       const nextJob: Job = { ...job, title: job.title || r.job.title, company: job.company || r.job.company };
@@ -214,7 +237,7 @@ export default function Page() {
       const v: Version = {
         id: uid(),
         name: [nextJob.company, nextJob.title].filter(Boolean).join(' - ') || 'Tailored CV',
-        cv: normalizeCV(r.cv),
+        cv: withExtra(normalizeCV(r.cv), extraSkills),
         job: nextJob,
         changes: r.changes,
         gaps: r.gaps,
@@ -245,12 +268,7 @@ export default function Page() {
   };
 
   const onAddSkill = (kw: string) => {
-    const label = 'Additional Skills';
-    const has = cv.skills.find((g) => g.label === label);
-    const skills = has
-      ? cv.skills.map((g) => (g.label === label ? { ...g, items: g.items ? `${g.items}, ${kw}` : kw } : g))
-      : [...cv.skills, { id: uid(), label, items: kw }];
-    setCv({ ...cv, skills });
+    setCv(withExtra(cv, [...extraSkills, kw]));
     notify('ok', `Added “${kw}” to Additional Skills`);
   };
 
