@@ -39,7 +39,7 @@ export function CVPaper({ cv, layout }: { cv: CV; layout: Layout }) {
                 <div className="cv-row">
                   <div>
                     <strong>{e.role}</strong>
-                    {e.company ? <span> — {e.company}</span> : null}
+                    {e.company ? <span>, {e.company}</span> : null}
                     {e.location ? <span className="cv-muted">, {e.location}</span> : null}
                   </div>
                   <div className="cv-date">{dateRange(e.start, e.end)}</div>
@@ -63,7 +63,7 @@ export function CVPaper({ cv, layout }: { cv: CV; layout: Layout }) {
                 <div className="cv-row">
                   <div>
                     <strong>{e.school}</strong>
-                    {e.location ? <span className="cv-muted"> — {e.location}</span> : null}
+                    {e.location ? <span className="cv-muted">, {e.location}</span> : null}
                   </div>
                   <div className="cv-date">{dateRange(e.start, e.end)}</div>
                 </div>
@@ -119,7 +119,7 @@ export function CVPaper({ cv, layout }: { cv: CV; layout: Layout }) {
                 <div className="cv-row">
                   <div>
                     <strong>{o.role}</strong>
-                    {o.org ? <span> — {o.org}</span> : null}
+                    {o.org ? <span>, {o.org}</span> : null}
                   </div>
                   <div className="cv-date">{o.period}</div>
                 </div>
@@ -217,7 +217,11 @@ export default function PreviewPane({ cv, layout, pageLimit }: { cv: CV; layout:
         <div className="scale-box" style={{ width: PAPER_W * scale, height: paperH * scale }}>
           <div className="paper-scale" style={{ width: PAPER_W, transform: `scale(${scale})` }}>
             <div className="paper" id="cv-paper" ref={paperRef}>
-              <CVPaper cv={cv} layout={layout} />
+              <table className="pf">
+                <thead><tr><td><div className="pf-gap" /></td></tr></thead>
+                <tbody><tr><td><CVPaper cv={cv} layout={layout} /></td></tr></tbody>
+                <tfoot><tr><td><div className="pf-gap" /></td></tr></tfoot>
+              </table>
               {guides.map((top, i) => (
                 <div className="page-guide" key={i} style={{ top }}>
                   <span>Page {i + 2}</span>

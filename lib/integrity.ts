@@ -3,7 +3,7 @@ import { cvToText, normalizeCV } from './cv';
 
 /**
  * Safety net applied to every tailored CV.
- * The model may reword, reorder and trim — but it may never change facts:
+ * The model may reword, reorder and trim, but it may never change facts:
  * employers, titles, dates, schools, awards, certifications and skills must exist in the baseline.
  */
 
@@ -62,7 +62,7 @@ export function enforceIntegrity(baseline: CV, rawOut: unknown) {
   }
   cv.experience = baseline.experience.map((b) => ({ ...b, bullets: expOut.get(b.id) ?? b.bullets }));
   if (usedExp.size < baseline.experience.length) {
-    notes.push('Restored experience entries the model tried to remove — jobs are never deleted.');
+    notes.push('Restored experience entries the model tried to remove. Jobs are never deleted.');
   }
 
   // --- education: baseline facts, model-written details
@@ -126,7 +126,7 @@ export function enforceIntegrity(baseline: CV, rawOut: unknown) {
   );
   const warnings: string[] = [];
   outNums.forEach((n) => {
-    if (!baseNums.has(n)) warnings.push(`The number "${n}" does not appear in your baseline CV — verify or remove it.`);
+    if (!baseNums.has(n)) warnings.push(`The number "${n}" does not appear in your baseline CV. Verify or remove it.`);
   });
 
   return { cv, notes, warnings };

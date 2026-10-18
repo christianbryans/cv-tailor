@@ -62,7 +62,7 @@ export async function buildDocx(cv: CV, layout: Layout): Promise<Blob> {
       cv.experience.forEach((e) => {
         kids.push(
           row(
-            [run(e.role, { bold: true }), ...(e.company ? [run(` — ${e.company}`)] : []), ...(e.location ? [run(`, ${e.location}`, { color: '555555' })] : [])],
+            [run(e.role, { bold: true }), ...(e.company ? [run(`, ${e.company}`)] : []), ...(e.location ? [run(`, ${e.location}`, { color: '555555' })] : [])],
             dateRange(e.start, e.end)
           )
         );
@@ -72,7 +72,7 @@ export async function buildDocx(cv: CV, layout: Layout): Promise<Blob> {
     if (k === 'education' && cv.education.length) {
       kids.push(heading(title));
       cv.education.forEach((e) => {
-        kids.push(row([run(e.school, { bold: true }), ...(e.location ? [run(` — ${e.location}`, { color: '555555' })] : [])], dateRange(e.start, e.end)));
+        kids.push(row([run(e.school, { bold: true }), ...(e.location ? [run(`, ${e.location}`, { color: '555555' })] : [])], dateRange(e.start, e.end)));
         if (e.degree) kids.push(para(e.degree, 20));
         e.details.forEach((d) => kids.push(bullet(d)));
       });
@@ -92,7 +92,7 @@ export async function buildDocx(cv: CV, layout: Layout): Promise<Blob> {
     if (k === 'organizations' && cv.organizations.length) {
       kids.push(heading(title));
       cv.organizations.forEach((o) => {
-        kids.push(row([run(o.role, { bold: true }), ...(o.org ? [run(` — ${o.org}`)] : [])], o.period));
+        kids.push(row([run(o.role, { bold: true }), ...(o.org ? [run(`, ${o.org}`)] : [])], o.period));
         if (o.description) kids.push(para(o.description));
       });
     }
@@ -100,7 +100,7 @@ export async function buildDocx(cv: CV, layout: Layout): Promise<Blob> {
 
   const doc = new Document({
     creator: cv.name,
-    title: `${cv.name} — CV`,
+    title: `${cv.name} CV`,
     styles: { default: { document: { run: { font: FONT, size: 20 } } } },
     numbering: {
       config: [

@@ -54,7 +54,7 @@ async function fetchPage(start: string) {
       url = new URL(res.headers.get('location')!, url);
       continue;
     }
-    if (!res.ok) throw new ApiError(422, `The site answered ${res.status}. It may block bots — paste the description instead.`);
+    if (!res.ok) throw new ApiError(422, `The site answered ${res.status}. It may block bots. Paste the description instead.`);
     const type = res.headers.get('content-type') || '';
     if (!/text\/html|application\/xhtml|text\/plain/i.test(type)) throw new ApiError(415, 'That link is not a web page.');
     const reader = res.body?.getReader();
@@ -76,7 +76,7 @@ async function fetchPage(start: string) {
   throw new ApiError(422, 'Too many redirects.');
 }
 
-const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', bull: '•' };
+const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '-', mdash: '-', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', bull: '•' };
 const decode = (s: string) =>
   s
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))

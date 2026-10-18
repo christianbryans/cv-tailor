@@ -3,8 +3,8 @@ import '@fontsource-variable/inter';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tailor — ATS CV Studio',
-  description: 'Upload your baseline CV, paste a job link, and get an ATS-ready CV tailored to the role — without inventing a single fact.',
+  title: 'Tailor | ATS CV Studio',
+  description: 'Upload your baseline CV, paste a job link, and get an ATS-ready CV tailored to the role, without inventing a single fact.',
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };

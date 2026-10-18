@@ -110,9 +110,9 @@ export function atsChecks(cv: CV): Check[] {
   return [
     { id: 'contact', label: 'Contact details parse cleanly', ok: emailOk && !!cv.phone, hint: 'Add a valid email and phone number in the header.' },
     { id: 'dates', label: 'Every role has start and end dates', ok: datesOk, hint: 'ATS timelines break when a role has no dates.' },
-    { id: 'summary', label: 'Summary is concise (≤ 90 words)', ok: summaryWords > 0 && summaryWords <= 90, hint: `Your summary is ${summaryWords} words — recruiters skim it in seconds.` },
-    { id: 'bullets', label: 'Bullets are scannable (≤ 260 characters)', ok: longBullets === 0, hint: `${longBullets} bullet(s) are very long — split or tighten them.` },
-    { id: 'length', label: 'Length fits 2 pages (≤ 1,000 words)', ok: words <= 1000, hint: `${words} words in total — trim the least relevant items.` },
+    { id: 'summary', label: 'Summary is concise (≤ 90 words)', ok: summaryWords > 0 && summaryWords <= 90, hint: `Your summary is ${summaryWords} words. recruiters skim it in seconds.` },
+    { id: 'bullets', label: 'Bullets are scannable (≤ 260 characters)', ok: longBullets === 0, hint: `${longBullets} bullet(s) are very long. split or tighten them.` },
+    { id: 'length', label: 'Length fits 2 pages (≤ 1,000 words)', ok: words <= 1000, hint: `${words} words in total. Trim the least relevant items.` },
     { id: 'links', label: 'Links include full URLs', ok: linksOk, hint: 'Add the LinkedIn / portfolio URL so it prints as readable text.' },
     { id: 'format', label: 'Single column, standard headings, no images or tables', ok: true, hint: '' },
   ];

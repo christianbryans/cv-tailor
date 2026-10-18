@@ -50,7 +50,7 @@ export default function MatchPanel(p: Props) {
               <span className="kpi-sub">to review</span>
             </div>
           </section>
-          <p className="score-note">Estimated from the posting text — not an official ATS score.</p>
+          <p className="score-note">Estimated from the posting text. Not an official ATS score.</p>
 
           <section className="card">
             <div className="kw-block">
@@ -73,12 +73,12 @@ export default function MatchPanel(p: Props) {
                 </div>
                 <div className="chips">
                   {a.missing.map((k) => (
-                    <button className="chip chip-warn" key={k} onClick={() => p.onAddSkill(k)} title="Add to your skills — only if it is true">
+                    <button className="chip chip-warn" key={k} onClick={() => p.onAddSkill(k)} title="Add to your skills, only if it is true">
                       <Icon name="plus" size={12} /> {k}
                     </button>
                   ))}
                 </div>
-                <small className="hint">Click a term to add it to “Additional Skills” — only if you genuinely have it.</small>
+                <small className="hint">Click a term to add it to “Additional Skills”, only if you genuinely have it.</small>
               </div>
             )}
           </section>

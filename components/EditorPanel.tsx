@@ -183,7 +183,7 @@ export default function EditorPanel({ cv, setCv, layout, setLayout }: Props) {
 
       <Acc id="summary" title="Professional summary" open={!!open.summary} toggle={toggle} right={eye('summary')}>
         <Field value={cv.summary} onChange={(v) => up({ summary: v })} rows={6} />
-        <div className="hint">{cv.summary.split(/\s+/).filter(Boolean).length} words · aim for 40–75</div>
+        <div className="hint">{cv.summary.split(/\s+/).filter(Boolean).length} words · aim for 40 to 75</div>
       </Acc>
 
       <Acc id="experience" title="Work experience" count={cv.experience.length} open={!!open.experience} toggle={toggle} right={eye('experience')}>

@@ -3,8 +3,9 @@ import { SECTION_LABELS } from './types';
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
 
-const s = (v: unknown): string =>
-  typeof v === 'string' ? v.trim() : v == null ? '' : String(v).trim();
+/** Em/en dashes read as machine-written, so they never enter the CV. */
+export const noDash = (x: string) => x.replace(/\s*[\u2014\u2013]\s*/g, ' - ');
+const s = (v: unknown): string => noDash(typeof v === 'string' ? v.trim() : v == null ? '' : String(v).trim());
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const strs = (v: unknown): string[] => arr(v).map(s).filter(Boolean);
 
@@ -59,7 +60,7 @@ export function normalizeCV(raw: unknown): CV {
 }
 
 export function dateRange(start: string, end: string) {
-  if (start && end) return `${start} – ${end}`;
+  if (start && end) return `${start} - ${end}`;
   return start || end || '';
 }
 
@@ -78,7 +79,7 @@ export function cvToText(cv: CV): string {
   return parts.filter(Boolean).join('\n');
 }
 
-/** Clean plain text version — handy for pasting into portals that ask for text. */
+/** Clean plain text version, handy for pasting into portals that ask for text. */
 export function cvToPlainText(cv: CV, layout: Layout): string {
   const out: string[] = [];
   out.push(cv.name.toUpperCase());
@@ -94,7 +95,7 @@ export function cvToPlainText(cv: CV, layout: Layout): string {
     if (k === 'experience' && cv.experience.length) {
       heading(k);
       cv.experience.forEach((e) => {
-        out.push(`${e.role} — ${e.company}${e.location ? `, ${e.location}` : ''} (${dateRange(e.start, e.end)})`);
+        out.push(`${e.role}, ${e.company}${e.location ? `, ${e.location}` : ''} (${dateRange(e.start, e.end)})`);
         e.bullets.forEach((b) => out.push(`- ${b}`));
         out.push('');
       });
@@ -102,7 +103,7 @@ export function cvToPlainText(cv: CV, layout: Layout): string {
     if (k === 'education' && cv.education.length) {
       heading(k);
       cv.education.forEach((e) => {
-        out.push(`${e.degree} — ${e.school}${e.location ? `, ${e.location}` : ''} (${dateRange(e.start, e.end)})`);
+        out.push(`${e.degree}, ${e.school}${e.location ? `, ${e.location}` : ''} (${dateRange(e.start, e.end)})`);
         e.details.forEach((b) => out.push(`- ${b}`));
         out.push('');
       });
@@ -122,7 +123,7 @@ export function cvToPlainText(cv: CV, layout: Layout): string {
     if (k === 'organizations' && cv.organizations.length) {
       heading(k);
       cv.organizations.forEach((o) => {
-        out.push(`${o.role} — ${o.org} (${o.period})`);
+        out.push(`${o.role}, ${o.org} (${o.period})`);
         if (o.description) out.push(o.description);
         out.push('');
       });

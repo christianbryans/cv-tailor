@@ -199,7 +199,7 @@ export default function SourcePanel(p: Props) {
           <textarea
             className="textarea"
             rows={9}
-            placeholder="Paste the full job posting — responsibilities, requirements, nice-to-haves…"
+            placeholder="Paste the full job posting: responsibilities, requirements, nice-to-haves…"
             value={p.job.text}
             onChange={(e) => p.setJob({ ...p.job, text: e.target.value })}
           />

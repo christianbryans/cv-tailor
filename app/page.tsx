@@ -84,7 +84,7 @@ export default function Page() {
       }
       setCode(localStorage.getItem(`${LS}:code`) || '');
     } catch {
-      /* corrupted storage — start fresh */
+      /* corrupted storage, start fresh */
     }
     setTheme((document.documentElement.dataset.theme as 'light' | 'dark') || 'light');
     setHydrated(true);
@@ -213,7 +213,7 @@ export default function Page() {
       setJob(nextJob);
       const v: Version = {
         id: uid(),
-        name: [nextJob.company, nextJob.title].filter(Boolean).join(' — ') || 'Tailored CV',
+        name: [nextJob.company, nextJob.title].filter(Boolean).join(' - ') || 'Tailored CV',
         cv: normalizeCV(r.cv),
         job: nextJob,
         changes: r.changes,
@@ -225,7 +225,7 @@ export default function Page() {
       setActiveId(v.id);
       setTab('match');
       setMobile('preview');
-      notify('ok', 'Tailored CV ready — review it on the right');
+      notify('ok', 'Tailored CV ready. Review it on the right.');
     } catch (e) {
       notify('err', (e as Error).message);
     } finally {
