@@ -106,7 +106,7 @@ export default function MatchPanel(p: Props) {
             <Icon name="sparkles" size={16} />
             <div>
               <h3>What changed</h3>
-              <p>Edits Claude made for this role.</p>
+              <p>Edits the AI made for this role.</p>
             </div>
           </div>
           <ul className="notes">

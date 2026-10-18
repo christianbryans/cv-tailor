@@ -475,7 +475,7 @@ export default function Page() {
               <span>{tailorLabel}</span>
             </button>
             <p className="foot-note">
-              {!jobReady ? 'Add a job description to unlock tailoring.' : 'Claude rewrites from your baseline. Employers, dates, skills and awards are verified against it.'}
+              {!jobReady ? 'Add a job description to unlock tailoring.' : 'The AI rewrites from your baseline. Employers, dates, skills and awards are verified against it.'}
             </p>
           </div>
         </aside>

@@ -1,5 +1,5 @@
-import type Anthropic from '@anthropic-ai/sdk';
-import { ApiError, MODEL, extractJSON, fail, getClient, guard, textOf } from '@/lib/server';
+import { ApiError, extractJSON, fail, guard } from '@/lib/server';
+import { complete, pdfToText, provider } from '@/lib/llm';
 import { normalizeCV } from '@/lib/cv';
 
 export const runtime = 'nodejs';
@@ -49,7 +49,8 @@ export async function POST(req: Request) {
       const name = file.name.toLowerCase();
       const buf = Buffer.from(await file.arrayBuffer());
       if (name.endsWith('.pdf')) {
-        pdf = buf.toString('base64');
+        if (provider() === 'claude') pdf = buf.toString('base64');
+        else text = await pdfToText(buf);
       } else if (name.endsWith('.docx')) {
         const mod: any = await import('mammoth');
         const extract = mod.extractRawText ?? mod.default?.extractRawText;
@@ -66,22 +67,16 @@ export async function POST(req: Request) {
 
     if (!pdf && text.trim().length < 80) throw new ApiError(400, 'That file looks empty or unreadable. If it is a scanned image, paste the text instead.');
 
-    const content: Anthropic.ContentBlockParam[] = [];
-    if (pdf) {
-      content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdf } });
-      content.push({ type: 'text', text: 'Convert the attached resume into the JSON structure.' });
-    } else {
-      content.push({ type: 'text', text: `Convert this resume into the JSON structure.\n\n<resume>\n${text.slice(0, 40000)}\n</resume>` });
-    }
-
-    const msg = await getClient().messages.create({
-      model: MODEL,
-      max_tokens: 8000,
+    const raw = await complete({
       system: SYSTEM,
-      messages: [{ role: 'user', content }],
+      user: pdf
+        ? 'Convert the attached resume into the JSON structure.'
+        : `Convert this resume into the JSON structure.\n\n<resume>\n${text.slice(0, 24000)}\n</resume>`,
+      pdfBase64: pdf ?? undefined,
+      maxTokens: 6000,
     });
 
-    const cv = normalizeCV(extractJSON(textOf(msg)));
+    const cv = normalizeCV(extractJSON(raw));
     if (!cv.name && !cv.experience.length && !cv.education.length) {
       throw new ApiError(422, 'Could not find resume content in that file.');
     }

@@ -212,7 +212,7 @@ export default function SourcePanel(p: Props) {
           <span className="step">3</span>
           <div>
             <h3>Tailoring</h3>
-            <p>How far should Claude go? Facts are never changed.</p>
+            <p>How far should the AI go? Facts are never changed.</p>
           </div>
         </div>
 

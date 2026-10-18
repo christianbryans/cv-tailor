@@ -1,4 +1,5 @@
-import { ApiError, MODEL, extractJSON, fail, getClient, guard, textOf } from '@/lib/server';
+import { ApiError, extractJSON, fail, guard } from '@/lib/server';
+import { complete } from '@/lib/llm';
 import { normalizeCV } from '@/lib/cv';
 import { enforceIntegrity } from '@/lib/integrity';
 
@@ -64,7 +65,7 @@ REWRITE INTENSITY: ${INTENSITY[intensity]}
 ${LENGTH[pages]}
 
 <job_posting title="${String(body.job?.title || '').replace(/"/g, "'").slice(0, 160)}" company="${String(body.job?.company || '').replace(/"/g, "'").slice(0, 160)}">
-${jobText.slice(0, 14000)}
+${jobText.slice(0, 9000)}
 </job_posting>
 
 <baseline_resume_json>
@@ -73,14 +74,8 @@ ${JSON.stringify(baseline)}
 
 Tailor the resume to the posting following all rules. Return the JSON object only.`;
 
-    const msg = await getClient().messages.create({
-      model: MODEL,
-      max_tokens: 9000,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: user }],
-    });
-
-    const parsed = extractJSON(textOf(msg));
+    const raw = await complete({ system: SYSTEM, user, maxTokens: 6500 });
+    const parsed = extractJSON(raw);
     if (!parsed?.cv) throw new ApiError(502, 'The model returned an unexpected structure. Please try again.');
 
     const { cv, notes, warnings } = enforceIntegrity(baseline, parsed.cv);
