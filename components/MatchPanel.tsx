@@ -1,5 +1,6 @@
 'use client';
 
+import { tier } from '@/lib/ats';
 import type { Analysis, Check } from '@/lib/ats';
 import { Icon } from './Icons';
 
@@ -14,52 +15,47 @@ type Props = {
   onGoSource: () => void;
 };
 
-function Ring({ value }: { value: number }) {
-  const R = 38;
-  const C = 2 * Math.PI * R;
-  const tone = value >= 75 ? 'good' : value >= 50 ? 'mid' : 'low';
-  return (
-    <div className={`ring ring-${tone}`} role="img" aria-label={`Keyword match ${value} percent`}>
-      <svg viewBox="0 0 100 100" width="104" height="104">
-        <circle cx="50" cy="50" r={R} className="ring-bg" />
-        <circle
-          cx="50"
-          cy="50"
-          r={R}
-          className="ring-fg"
-          strokeDasharray={`${(value / 100) * C} ${C}`}
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-      <div className="ring-n">
-        <b>{value}</b>
-        <span>%</span>
-      </div>
-    </div>
-  );
-}
+const TIER_LABEL = { poor: 'Low', fair: 'Fair', good: 'Good', excellent: 'Excellent' } as const;
 
 export default function MatchPanel(p: Props) {
   const { analysis: a } = p;
+  const t = tier(a.score);
   return (
     <div className="stack">
-      <section className="card">
-        {p.hasJob && a.total > 0 ? (
-          <>
-            <div className="score">
-              <Ring value={a.score} />
-              <div>
-                <h3>Keyword match</h3>
-                <p>
-                  {a.matched.length} of {a.total} key terms from the posting appear in this CV.
-                </p>
-                <small>Estimated from the posting text — not an official ATS score.</small>
+      {p.hasJob && a.total > 0 ? (
+        <>
+          <section className="kpis" aria-label="Keyword match summary">
+            <div className="kpi">
+              <span className="kpi-l">Keyword match</span>
+              <div className="kpi-row">
+                <span className="t-kpi">{a.score}%</span>
               </div>
+              <span className={`trend tier-${t}`}>
+                <Icon name={a.score >= 50 ? 'trendup' : 'trenddown'} size={16} />
+                {TIER_LABEL[t]}
+              </span>
             </div>
+            <div className="kpi">
+              <span className="kpi-l">In your CV</span>
+              <div className="kpi-row">
+                <span className="t-kpi">{a.matched.length}</span>
+              </div>
+              <span className="kpi-sub">of {a.total} terms</span>
+            </div>
+            <div className="kpi">
+              <span className="kpi-l">Not found</span>
+              <div className="kpi-row">
+                <span className="t-kpi">{a.missing.length}</span>
+              </div>
+              <span className="kpi-sub">to review</span>
+            </div>
+          </section>
+          <p className="score-note">Estimated from the posting text — not an official ATS score.</p>
 
+          <section className="card">
             <div className="kw-block">
               <div className="kw-h">
-                <Icon name="check" size={13} /> In your CV <em>{a.matched.length}</em>
+                <Icon name="check" size={16} /> In your CV <em>{a.matched.length}</em>
               </div>
               <div className="chips">
                 {a.matched.map((k) => (
@@ -72,21 +68,23 @@ export default function MatchPanel(p: Props) {
 
             {a.missing.length > 0 && (
               <div className="kw-block">
-                <div className="kw-h warn">
-                  <Icon name="alert" size={13} /> Not found <em>{a.missing.length}</em>
+                <div className="kw-h">
+                  <Icon name="alert" size={16} /> Not found <em>{a.missing.length}</em>
                 </div>
                 <div className="chips">
                   {a.missing.map((k) => (
                     <button className="chip chip-warn" key={k} onClick={() => p.onAddSkill(k)} title="Add to your skills — only if it is true">
-                      <Icon name="plus" size={11} /> {k}
+                      <Icon name="plus" size={12} /> {k}
                     </button>
                   ))}
                 </div>
                 <small className="hint">Click a term to add it to “Additional Skills” — only if you genuinely have it.</small>
               </div>
             )}
-          </>
-        ) : (
+          </section>
+        </>
+      ) : (
+        <section className="card">
           <div className="empty">
             <div className="empty-ico">
               <Icon name="target" size={20} />
@@ -97,8 +95,8 @@ export default function MatchPanel(p: Props) {
               Add a job
             </button>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {p.changes.length > 0 && (
         <section className="card">

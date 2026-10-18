@@ -117,3 +117,12 @@ export function atsChecks(cv: CV): Check[] {
     { id: 'format', label: 'Single column, standard headings, no images or tables', ok: true, hint: '' },
   ];
 }
+
+/** Score tiers: poor / fair / good / excellent (bands mirror the 2-3-3-2 spread of the design system). */
+export type Tier = 'poor' | 'fair' | 'good' | 'excellent';
+export function tier(score: number): Tier {
+  if (score >= 85) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 30) return 'fair';
+  return 'poor';
+}

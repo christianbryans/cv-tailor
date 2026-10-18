@@ -25,6 +25,9 @@ const P = {
   layout: 'M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zM9 3v18',
   history: 'M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5M12 7v5l3 2',
   reset: 'M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5',
+  selector: 'M7 15l5 5 5-5M7 9l5-5 5 5',
+  trendup: 'M22 7l-7.9 7.9c-.4.4-.6.6-.8.7a1 1 0 0 1-.6 0c-.2-.1-.4-.3-.8-.7l-2.8-2.8c-.4-.4-.6-.6-.8-.7a1 1 0 0 0-.6 0c-.2.1-.4.3-.8.7L2 17M22 7h-7m7 0v7',
+  trenddown: 'M22 17l-7.9-7.9c-.4-.4-.6-.6-.8-.7a1 1 0 0 0-.6 0c-.2.1-.4.3-.8.7l-2.8 2.8c-.4.4-.6.6-.8.7a1 1 0 0 1-.6 0c-.2-.1-.4-.3-.8-.7L2 7M22 17h-7m7 0v-7',
 } as const;
 
 export type IconName = keyof typeof P;
@@ -38,7 +41,7 @@ export function Icon({ name, size = 16, className }: { name: IconName; size?: nu
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -48,12 +51,12 @@ export function Icon({ name, size = 16, className }: { name: IconName; size?: nu
   );
 }
 
-export function Logo({ size = 26 }: { size?: number }) {
+export function Logo({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="9" fill="var(--ink)" />
-      <path d="M10 9h9.5a3 3 0 0 1 0 6H12" fill="none" stroke="var(--panel)" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M12 15h6.5a3 3 0 0 1 0 6H10" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
+      <rect width="40" height="40" rx="12" fill="#1a1d25" />
+      <path d="M13 12h10.5a3.5 3.5 0 0 1 0 7H15" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M15 19h8a3.5 3.5 0 0 1 0 7H13" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
     </svg>
   );
 }

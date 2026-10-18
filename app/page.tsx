@@ -5,7 +5,7 @@ import { DEFAULT_LAYOUT, DEFAULT_OPTS } from '@/lib/types';
 import type { CV, Job, Layout, Opts, Version } from '@/lib/types';
 import { SAMPLE_CV } from '@/lib/sample';
 import { cvToPlainText, normalizeCV, uid } from '@/lib/cv';
-import { analyze, atsChecks } from '@/lib/ats';
+import { analyze, atsChecks, tier } from '@/lib/ats';
 import { Icon, Logo } from '@/components/Icons';
 import SourcePanel from '@/components/SourcePanel';
 import EditorPanel from '@/components/EditorPanel';
@@ -311,7 +311,6 @@ export default function Page() {
 
         <div className="top-mid">
           <div className="ver">
-            <Icon name="layout" size={14} />
             <select aria-label="Active CV version" value={activeId ?? ''} onChange={(e) => onSelectVersion(e.target.value || null)}>
               <option value="">Baseline · master CV</option>
               {versions.map((v) => (
@@ -320,6 +319,7 @@ export default function Page() {
                 </option>
               ))}
             </select>
+            <Icon name="selector" size={16} className="ver-ico" />
           </div>
         </div>
 
@@ -369,7 +369,7 @@ export default function Page() {
           </div>
 
           <div className="menu-wrap">
-            <button className="btn btn-dark" onClick={() => setMenu(menu === 'export' ? null : 'export')} aria-haspopup="menu" aria-expanded={menu === 'export'}>
+            <button className="btn btn-primary" onClick={() => setMenu(menu === 'export' ? null : 'export')} aria-haspopup="menu" aria-expanded={menu === 'export'}>
               <Icon name="download" size={15} /> Export
             </button>
             {menu === 'export' && (
@@ -404,15 +404,14 @@ export default function Page() {
           <nav className="tabs" role="tablist">
             {(
               [
-                ['source', 'Source', 'upload'],
-                ['editor', 'Editor', 'pen'],
-                ['match', 'Match', 'target'],
+                ['source', 'Source'],
+                ['editor', 'Editor'],
+                ['match', 'Match'],
               ] as const
-            ).map(([id, label, icon]) => (
+            ).map(([id, label]) => (
               <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>
-                <Icon name={icon} size={14} />
                 {label}
-                {id === 'match' && jobReady && analysis.total > 0 && <em className={`score-dot ${analysis.score >= 75 ? 'good' : analysis.score >= 50 ? 'mid' : 'low'}`}>{analysis.score}</em>}
+                {id === 'match' && jobReady && analysis.total > 0 && <em className={`score-dot tier-${tier(analysis.score)}`}>{analysis.score}%</em>}
               </button>
             ))}
           </nav>
