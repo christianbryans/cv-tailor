@@ -24,8 +24,9 @@ ATS formatting rules
 - Put the posting's most important keywords early (headline, first summary sentence, top skill groups) and spread them naturally, without keyword stuffing.
 - Skills: reorder groups and items by relevance to the posting; you may rename group labels; you may drop items that are clearly irrelevant to the role.
 - "headline" = a short title line aligned with the posting's role, built only from titles/skills the candidate really has (e.g. "Product Designer | UI/UX | Design Systems").
-- "summary" = 2 to 4 sentences, maximum 75 words, written for this role.
-- Never remove an experience entry or an education entry. You may trim bullets/awards/certifications/organizations that are least relevant, depending on intensity and length.
+- "summary" = the executive summary, the first thing a recruiter reads, so make it count. Write 4 to 6 sentences, 90 to 130 words, in the first person implied (no "I"). Structure: (1) who the candidate is: target role title + years/scope of real experience; (2) their strongest proof for THIS posting, with the concrete products, domains, tools and measurable results found in the baseline; (3) the skills and ways of working the posting asks for that the baseline genuinely shows; (4) one closing sentence on the value they bring to this role or company. Use specifics from the baseline (names of products, numbers, tools), not generic filler like "passionate", "hard-working" or "team player". Weave in the priority keywords naturally. Every claim must be backed by the baseline.
+- Never remove an experience entry or an education entry. You may trim experience bullets and organizations that are least relevant, depending on intensity and length.
+- ACHIEVEMENTS ARE SACRED: never remove, shorten or rewrite any award or certification. They are real accomplishments. You may only reorder them, most relevant to the posting first.
 
 Input and output are COMPACT. You only see the editable parts of the resume, addressed by index. Everything you do not return stays exactly as in the baseline.
 Return ONLY a JSON object, no prose, no code fences. Include only the keys you actually change:
@@ -35,8 +36,8 @@ Return ONLY a JSON object, no prose, no code fences. Include only the keys you a
   "summary": "...",
   "experience": [{"i": 0, "bullets": ["rewritten bullets for experience #0"]}],
   "skills": [{"label": "group label", "items": "item, item, item"}],
-  "awards": [indexes of awards to keep, most relevant first],
-  "certifications": [indexes of certifications to keep, most relevant first],
+  "awards": [ALL award indexes, reordered with the most relevant first],
+  "certifications": [ALL certification indexes, reordered with the most relevant first],
   "organizations": [{"i": 0, "description": "rewritten description"}],
   "changes": ["3-8 short, specific notes on what you changed and why"],
   "gaps": ["requirements in the posting the candidate does not evidence yet (empty array if none)"]
@@ -46,22 +47,25 @@ Omit "experience" and "organizations" entirely when the rewrite intensity says t
 const INTENSITY: Record<string, string> = {
   light: 'LIGHT: rewrite only "headline" and "summary", and reorder skills. Keep every experience bullet word-for-word (you may reorder bullets by relevance). Keep all awards, certifications and organizations.',
   balanced:
-    'BALANCED: rewrite "headline" and "summary"; reorder and lightly rephrase experience bullets to surface the posting\'s themes and vocabulary where truthful; reorder skills; reorder awards/certifications/organizations by relevance and drop only clearly irrelevant ones.',
-  bold: 'BOLD: everything in BALANCED, plus merge or trim low-relevance bullets and drop awards, certifications and organizations that do not help for this role, so the strongest evidence is front and centre.',
+    'BALANCED: rewrite "headline" and "summary"; reorder and lightly rephrase experience bullets to surface the posting\'s themes and vocabulary where truthful; reorder skills; reorder awards and certifications by relevance (never drop any of them); reorder organizations by relevance and drop only clearly irrelevant ones.',
+  bold: 'BOLD: everything in BALANCED, plus merge or trim low-relevance bullets and drop organizations that do not help for this role. Awards and certifications are always kept in full, only reordered.',
 };
 
 const LENGTH: Record<number, string> = {
-  1: 'LENGTH: the result must fit ONE A4 page, at most ~480 words in total, max 3 bullets per role, max 6 awards, max 4 certifications, max 3 organizations, education details limited to GPA and the most relevant 1 to 2 lines.',
-  2: 'LENGTH: the result must fit TWO A4 pages, at most ~900 words in total.',
+  1: 'LENGTH: the result must fit ONE A4 page, at most ~480 words in total, not counting awards and certifications, max 3 bullets per role, max 3 organizations, ALL awards and certifications kept (they are never cut for length), education details limited to GPA and the most relevant 1 to 2 lines.',
+  2: 'LENGTH: the result must fit TWO A4 pages, at most ~900 words in total, not counting awards and certifications.',
 };
 
 /** Apply the model's compact edits onto the baseline; anything missing or out of range falls back to the baseline. */
 function mergeEdits(base: CV, p: any): CV {
   const txt = (v: unknown, fallback: string) => (typeof v === 'string' && v.trim() ? v : fallback);
   const idx = (v: unknown, len: number) => (Array.isArray(v) ? v.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < len) : null);
+  // the model may reorder achievements but never drop them: anything it omitted is appended
   const pickList = (v: unknown, list: string[]) => {
-    const ids = idx(v, list.length);
-    return ids ? [...new Set(ids)].map((i) => list[i]) : list;
+    const ids = idx(v, list.length) ?? [];
+    const order = [...new Set(ids)];
+    list.forEach((_, i) => order.includes(i) || order.push(i));
+    return order.map((i) => list[i]);
   };
 
   const bullets = new Map<number, string[]>();
@@ -120,6 +124,7 @@ export async function POST(req: Request) {
     const user = `OUTPUT LANGUAGE: write all rewritten text in ${language}. Do not translate proper nouns, company names, award names or tool names.
 REWRITE INTENSITY: ${INTENSITY[intensity]}
 ${LENGTH[pages]}
+SUMMARY LENGTH: the "summary" must be 5 sentences and between 95 and 130 words (count them). Shorter than 95 words is a failure. This applies even for the one-page option.
 PRIORITY KEYWORDS (pre-extracted from the posting; use only where the resume truthfully supports them): ${keywords.join(', ') || 'none'}
 
 <job_posting title="${String(body.job?.title || '').replace(/"/g, "'").slice(0, 160)}" company="${String(body.job?.company || '').replace(/"/g, "'").slice(0, 160)}">
